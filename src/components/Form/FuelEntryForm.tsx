@@ -59,13 +59,8 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
         if (!formData.receiptNumber) newErrors.receiptNumber = 'Receipt number is required';
         if (!formData.driverName) newErrors.driverName = 'Driver name is required';
 
-        // Vehicle Number Validation (Basic India format or generic)
-        const vehicleRegex = /^[A-Z]{2}[0-9]{1,2}[A-Z]{1,2}[0-9]{4}$/i; // Example: MP04AB1234
-
         if (!formData.vehicleNumber) {
             newErrors.vehicleNumber = 'Vehicle number is required';
-        } else if (!vehicleRegex.test(formData.vehicleNumber)) {
-            newErrors.vehicleNumber = 'Invalid format (e.g. MP04AB1234)';
         }
 
         if (!formData.vehicleType) newErrors.vehicleType = 'Vehicle type is required';
@@ -163,12 +158,11 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                         <div className="input-wrapper">
                             <Truck className="input-icon" size={18} />
                             <input
-                                type="text"
+                                type="number"
                                 name="vehicleNumber"
-                                placeholder="e.g., MP04AB1234"
+                                placeholder="e.g., 9876"
                                 value={formData.vehicleNumber}
                                 onChange={handleChange}
-                                style={{ textTransform: 'uppercase' }}
                             />
                         </div>
                         {errors.vehicleNumber && <span className="error-msg">{errors.vehicleNumber}</span>}
@@ -180,9 +174,11 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                             <Truck className="input-icon" size={18} />
                             <select name="vehicleType" value={formData.vehicleType} onChange={handleChange}>
                                 <option value="">Select Type</option>
-                                <option value="Truck">Truck</option>
-                                <option value="Bus">Bus</option>
-                                <option value="Car">Car</option>
+                                <option value="TIPPER">TIPPER</option>
+                                <option value="Refuse Compactor">Refuse Compactor</option>
+                                <option value="Tractor Loader">Tractor Loader</option>
+                                <option value="Dumper">Dumper</option>
+                                <option value="Bike">Bike</option>
                                 <option value="JCB">JCB</option>
                                 <option value="E-Rickshaw">E-Rickshaw</option>
                                 <option value="Generator">Generator</option>
