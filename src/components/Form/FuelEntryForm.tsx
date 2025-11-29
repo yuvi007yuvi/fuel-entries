@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Save, CheckCircle2, AlertCircle, Calendar, FileText, User, Truck, Droplet, Hash, IndianRupee, Phone } from 'lucide-react';
-import { submitToWebApp } from '../../services/googleSheets';
+import { Save, CheckCircle2, AlertCircle, Calendar, FileText, User, Truck, Droplet, Hash, IndianRupee, History } from 'lucide-react';
+import { submitToWebApp, fetchLastEntries, type FuelEntry } from '../../services/googleSheets';
+import { EntriesModal } from './EntriesModal';
 import logo from '../../assets/logo.png';
 import './FuelEntryForm.css';
 
@@ -18,7 +19,6 @@ interface FormData {
     fuelRate: string;
     totalAmount: string;
     supervisorName: string;
-    supervisorContact: string;
 }
 
 const INITIAL_DATA: FormData = {
@@ -31,8 +31,7 @@ const INITIAL_DATA: FormData = {
     quantity: '',
     fuelRate: '',
     totalAmount: '',
-    supervisorName: '',
-    supervisorContact: ''
+    supervisorName: ''
 };
 
 export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
@@ -40,6 +39,9 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
     const [errors, setErrors] = useState<Partial<FormData>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [submitStatus, setSubmitStatus] = useState<'idle' | 'success' | 'error'>('idle');
+    const [showEntriesModal, setShowEntriesModal] = useState(false);
+    const [lastEntries, setLastEntries] = useState<FuelEntry[]>([]);
+    const [isLoadingEntries, setIsLoadingEntries] = useState(false);
 
     // Auto-calculate Total Amount
     useEffect(() => {
@@ -70,11 +72,6 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
         if (!formData.fuelRate || parseFloat(formData.fuelRate) <= 0) newErrors.fuelRate = 'Valid rate required';
 
         if (!formData.supervisorName) newErrors.supervisorName = 'Supervisor name is required';
-
-        // Mobile Validation
-        const phoneRegex = /^[6-9]\d{9}$/;
-        if (!formData.supervisorContact) newErrors.supervisorContact = 'Contact number is required';
-        else if (!phoneRegex.test(formData.supervisorContact)) newErrors.supervisorContact = 'Invalid mobile number';
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -110,15 +107,39 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
         }
     };
 
+    const handleCheckEntries = async () => {
+        setShowEntriesModal(true);
+        setIsLoadingEntries(true);
+        try {
+            const entries = await fetchLastEntries();
+            setLastEntries(entries);
+        } catch (error) {
+            console.error("Failed to load entries", error);
+            // Optional: show error toast
+        } finally {
+            setIsLoadingEntries(false);
+        }
+    };
+
     return (
         <div className="form-container">
             <div className="form-card">
                 <div className="form-header">
-                    <img src={logo} alt="Logo" className="form-logo" />
-                    <div>
-                        <h2 className="form-title">New Fuel Entry</h2>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Secure Field Data Capture</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <img src={logo} alt="Logo" className="form-logo" />
+                        <div>
+                            <h2 className="form-title">New Fuel Entry</h2>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Secure Field Data Capture</p>
+                        </div>
                     </div>
+                    <button
+                        type="button"
+                        className="history-btn"
+                        onClick={handleCheckEntries}
+                        title="View Last 10 Entries"
+                    >
+                        <History size={20} />
+                    </button>
                 </div>
 
                 <form onSubmit={handleSubmit} className="form-grid">
@@ -265,9 +286,8 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                         </div>
                     </div>
 
-                    {/* Supervisor Details */}
                     <div className="form-group">
-                        <label>Supervisor Name</label>
+                        <label>Fuel Supervisor</label>
                         <div className="input-wrapper">
                             <User className="input-icon" size={18} />
                             <select
@@ -284,21 +304,7 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                         {errors.supervisorName && <span className="error-msg">{errors.supervisorName}</span>}
                     </div>
 
-                    <div className="form-group">
-                        <label>Supervisor Contact</label>
-                        <div className="input-wrapper">
-                            <Phone className="input-icon" size={18} />
-                            <input
-                                type="tel"
-                                name="supervisorContact"
-                                placeholder="10-digit Mobile Number"
-                                value={formData.supervisorContact}
-                                onChange={handleChange}
-                                maxLength={10}
-                            />
-                        </div>
-                        {errors.supervisorContact && <span className="error-msg">{errors.supervisorContact}</span>}
-                    </div>
+
 
                     <button type="submit" className="submit-btn" disabled={isSubmitting}>
                         {isSubmitting ? (
@@ -326,6 +332,13 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                     </div>
                 )}
             </div>
+
+            <EntriesModal
+                isOpen={showEntriesModal}
+                onClose={() => setShowEntriesModal(false)}
+                entries={lastEntries}
+                isLoading={isLoadingEntries}
+            />
         </div>
     );
 };
