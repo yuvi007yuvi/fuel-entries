@@ -198,6 +198,7 @@ export const FuelEntryForm: React.FC<FuelEntryFormProps> = () => {
                                 <option value="TIPPER">TIPPER</option>
                                 <option value="Refuse Compactor">Refuse Compactor</option>
                                 <option value="Tractor Loader">Tractor Loader</option>
+                                <option value="Tractor">Tractor</option>
                                 <option value="Dumper">Dumper</option>
                                 <option value="Bike">Bike</option>
                                 <option value="JCB">JCB</option>
